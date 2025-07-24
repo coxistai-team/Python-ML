@@ -18,4 +18,3 @@ python-dotenv
 flask
 openai
 gunicorn
-pyaudioop
