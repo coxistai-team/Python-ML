@@ -9,3 +9,4 @@ opencv-python
 PyPDF2
 python-pptx
 speechrecognition
+python-dotenv 
