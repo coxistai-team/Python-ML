@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from modules.image_ocr import extract_text_from_image
 from modules.pdf_parser import extract_text_from_file
-from modules.voice_input import transcribe_audio
+# from modules.voice_input import transcribe_audio
 from modules.text_classifier import is_educational
 from modules.query import SmartDeepSeek
 from modules.tts import TextToSpeech
@@ -139,10 +139,10 @@ def extract_text_from_file_input(file_path, file_type):
         elif file_type == 'document':
             text, success = extract_text_from_file(file_path)
             return text, success
-        elif file_type == 'audio':
-            result = transcribe_audio(file_path)
-            transcription = result.get('transcription', '')
-            return transcription, True if transcription and transcription.strip() else False
+        # elif file_type == 'audio':
+        #     result = transcribe_audio(file_path)
+        #     transcription = result.get('transcription', '')
+        #     return transcription, True if transcription and transcription.strip() else False
         else:
             return None, False
     except Exception as e:
