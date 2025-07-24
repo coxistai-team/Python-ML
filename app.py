@@ -12,7 +12,7 @@ from modules.pdf_parser import extract_text_from_file
 # from modules.voice_input import transcribe_audio
 from modules.text_classifier import is_educational
 from modules.query import SmartDeepSeek
-from modules.tts import TextToSpeech
+# from modules.tts import TextToSpeech
 
 
 app = Flask(__name__)
