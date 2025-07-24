@@ -9,8 +9,6 @@ PyMuPDF
 transformers
 torch
 gtts
-pygame
-pydub
 openai-whisper
 python-pptx
 reportlab
