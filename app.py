@@ -5,40 +5,25 @@ import tempfile
 from werkzeug.utils import secure_filename
 import logging
 import json
-from dotenv import load_dotenv
 
 from modules.image_ocr import extract_text_from_image
 from modules.pdf_parser import extract_text_from_file
-# from modules.voice_input import transcribe_audio
 from modules.text_classifier import is_educational
 from modules.query import SmartDeepSeek
-# from modules.tts import TextToSpeech
 
 
 app = Flask(__name__)
-CORS(app, resources={
-    r"/*": {
-        "origins": os.getenv("ALLOWED_ORIGINS", "*").split(","),
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
-    }
-})
+CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['UPLOAD_FOLDER'] = 'temp_uploads'
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-tts_engine = TextToSpeech(output_dir='temp_uploads')
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-if not OPENROUTER_API_KEY:
-    raise RuntimeError("OPENROUTER_API_KEY not set in environment variables.")
-
+OPENROUTER_API_KEY = "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"
 assistant = SmartDeepSeek(OPENROUTER_API_KEY)
 
 ALLOWED_EXTENSIONS = {
@@ -139,16 +124,15 @@ def extract_text_from_file_input(file_path, file_type):
         elif file_type == 'document':
             text, success = extract_text_from_file(file_path)
             return text, success
-        # elif file_type == 'audio':
-        #     result = transcribe_audio(file_path)
-        #     transcription = result.get('transcription', '')
-        #     return transcription, True if transcription and transcription.strip() else False
+        
         else:
             return None, False
     except Exception as e:
         logger.error(f"Error extracting text from {file_type}: {str(e)}")
         return None, False
-
+# @app.route("/")
+# def hello():
+#     return "Hello, Flask is working!"
 @app.route('/')
 def index():
     """API info endpoint"""
@@ -341,74 +325,74 @@ def extract_only():
     
     
 # Add this with your other endpoints
-@app.route('/api/tts', methods=['POST'])
-def text_to_speech():
-    """
-    Dedicated TTS endpoint
-    Expects JSON: {'text': 'text to speak', 'lang': 'en', 'play': True}
-    """
-    try:
-        data = request.get_json()
+# @app.route('/api/tts', methods=['POST'])
+# def text_to_speech():
+#     """
+#     Dedicated TTS endpoint
+#     Expects JSON: {'text': 'text to speak', 'lang': 'en', 'play': True}
+#     """
+#     try:
+#         data = request.get_json()
         
-        # Validate input
-        if not data or 'text' not in data:
-            return jsonify({'error': 'Text is required'}), 400
+#         # Validate input
+#         if not data or 'text' not in data:
+#             return jsonify({'error': 'Text is required'}), 400
             
-        text = data['text'].strip()
-        if not text:
-            return jsonify({'error': 'Text cannot be empty'}), 400
+#         text = data['text'].strip()
+#         if not text:
+#             return jsonify({'error': 'Text cannot be empty'}), 400
             
-        lang = data.get('lang', 'en')
-        play = data.get('play', True)  # Default to playing immediately
+#         lang = data.get('lang', 'en')
+#         play = data.get('play', True)  # Default to playing immediately
         
-        # Process TTS
-        if play:
-            success = tts_engine.text_to_speech(text, lang=lang)
-            return jsonify({
-                'success': success,
-                'message': 'Audio played successfully' if success else 'Failed to play audio'
-            })
-        else:
-            audio_path = tts_engine.text_to_speech(text, lang=lang, play=False)
-            if audio_path:
-                return jsonify({
-                    'success': True,
-                    'audio_path': audio_path,
-                    'message': 'Audio generated successfully'
-                })
-            return jsonify({'success': False, 'error': 'Failed to generate audio'}), 500
+#         # Process TTS
+#         if play:
+#             success = tts_engine.text_to_speech(text, lang=lang)
+#             return jsonify({
+#                 'success': success,
+#                 'message': 'Audio played successfully' if success else 'Failed to play audio'
+#             })
+#         else:
+#             audio_path = tts_engine.text_to_speech(text, lang=lang, play=False)
+#             if audio_path:
+#                 return jsonify({
+#                     'success': True,
+#                     'audio_path': audio_path,
+#                     'message': 'Audio generated successfully'
+#                 })
+#             return jsonify({'success': False, 'error': 'Failed to generate audio'}), 500
             
-    except Exception as e:
-        logger.error(f"TTS endpoint error: {str(e)}")
-        return jsonify({'error': 'Failed to process TTS request'}), 500
+#     except Exception as e:
+#         logger.error(f"TTS endpoint error: {str(e)}")
+#         return jsonify({'error': 'Failed to process TTS request'}), 500
     
     
-@app.route('/api/tts/cleanup', methods=['POST'])
-def tts_cleanup():
-    """Clean up TTS audio files"""
-    try:
-        data = request.get_json()
-        audio_path = data.get('audio_path')
+# @app.route('/api/tts/cleanup', methods=['POST'])
+# def tts_cleanup():
+#     """Clean up TTS audio files"""
+#     try:
+#         data = request.get_json()
+#         audio_path = data.get('audio_path')
         
-        if audio_path:
-            # Clean specific file
-            if os.path.exists(audio_path):
-                os.remove(audio_path)
-                return jsonify({'success': True, 'message': 'File removed'})
-            return jsonify({'error': 'File not found'}), 404
-        else:
-            # Clean all TTS files in directory
-            tts_files = [f for f in os.listdir(tts_engine.output_dir) 
-                        if f.startswith('tts_') and f.endswith('.mp3')]
-            for file in tts_files:
-                os.remove(os.path.join(tts_engine.output_dir, file))
-            return jsonify({
-                'success': True,
-                'message': f'Removed {len(tts_files)} audio files'
-            })
-    except Exception as e:
-        logger.error(f"TTS cleanup error: {str(e)}")
-        return jsonify({'error': 'Cleanup failed'}), 500
+#         if audio_path:
+#             # Clean specific file
+#             if os.path.exists(audio_path):
+#                 os.remove(audio_path)
+#                 return jsonify({'success': True, 'message': 'File removed'})
+#             return jsonify({'error': 'File not found'}), 404
+#         else:
+#             # Clean all TTS files in directory
+#             tts_files = [f for f in os.listdir(tts_engine.output_dir) 
+#                         if f.startswith('tts_') and f.endswith('.mp3')]
+#             for file in tts_files:
+#                 os.remove(os.path.join(tts_engine.output_dir, file))
+#             return jsonify({
+#                 'success': True,
+#                 'message': f'Removed {len(tts_files)} audio files'
+#             })
+#     except Exception as e:
+#         logger.error(f"TTS cleanup error: {str(e)}")
+#         return jsonify({'error': 'Cleanup failed'}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -431,4 +415,4 @@ def internal_error(e):
     return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=True, host='0.0.0.0', port=3001)
