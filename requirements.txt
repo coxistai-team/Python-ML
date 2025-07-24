@@ -8,12 +8,8 @@ python-docx
 PyMuPDF
 transformers
 torch
-gtts
-openai-whisper
 python-pptx
 reportlab
 python-dotenv
-flask
 openai
 gunicorn
-pygame
