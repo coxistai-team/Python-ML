@@ -17,3 +17,4 @@ reportlab
 python-dotenv
 flask
 openai
+gunicorn
